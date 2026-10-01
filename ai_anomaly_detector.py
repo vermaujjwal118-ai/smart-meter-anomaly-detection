@@ -19,7 +19,8 @@ from config import (
     MQTT_PASSWORD,
     TOPIC_RAW_DATA,
     TOPIC_ANOMALY_ALERTS,
-    DB_PATH
+    DB_PATH,
+    now_ist_str
 )
 from database import init_db, log_telemetry, log_anomaly
 from train_baseline_model import train_and_save_model
@@ -49,7 +50,7 @@ class AnomalyDetector:
         c = float(telemetry.get("current", 0.0))
         p = float(telemetry.get("power_kw", 0.0))
         pf = float(telemetry.get("power_factor", 0.95))
-        timestamp = telemetry.get("timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        timestamp = telemetry.get("timestamp", now_ist_str())
         meter_id = telemetry.get("meter_id", "SM001")
         energy_kwh = float(telemetry.get("energy_kwh", 0.0))
 

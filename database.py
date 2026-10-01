@@ -5,7 +5,7 @@ Uses SQLite (lightweight, zero-setup, built into Python)
 
 import sqlite3
 import datetime
-from config import DB_PATH
+from config import DB_PATH, now_ist_str
 
 def init_db():
     """Initializes the SQLite tables for telemetry and anomalies if they do not exist."""
@@ -67,7 +67,7 @@ def log_telemetry(data: dict):
             timestamp, meter_id, voltage, current, power_kw, energy_kwh, power_factor, frequency
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data.get("timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        data.get("timestamp", now_ist_str()),
         data.get("meter_id", "SM001"),
         data.get("voltage", 230.0),
         data.get("current", 0.0),
@@ -88,7 +88,7 @@ def log_anomaly(anomaly_record: dict):
             timestamp, meter_id, power_kw, voltage, current, anomaly_score, anomaly_type, severity, description
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        anomaly_record.get("timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        anomaly_record.get("timestamp", now_ist_str()),
         anomaly_record.get("meter_id", "SM001"),
         anomaly_record.get("power_kw", 0.0),
         anomaly_record.get("voltage", 230.0),
@@ -109,7 +109,7 @@ def log_security_event(event_type: str, severity: str, user: str, details: str):
         INSERT INTO security_logs (timestamp, event_type, severity, user, details)
         VALUES (?, ?, ?, ?, ?)
     """, (
-        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        now_ist_str(),
         event_type,
         severity,
         user,

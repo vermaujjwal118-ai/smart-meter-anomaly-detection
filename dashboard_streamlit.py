@@ -32,7 +32,8 @@ from config import (
     TOPIC_RAW_DATA,
     TOPIC_ANOMALY_ALERTS,
     DB_PATH,
-    METER_ID
+    METER_ID,
+    now_ist_str
 )
 from database import log_security_event
 
@@ -149,7 +150,7 @@ def inject_anomaly_via_mqtt(power_kw, voltage, event_name):
         current = round((power_kw * 1000.0) / (voltage * 0.95), 2)
         payload = {
             "meter_id": METER_ID,
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": now_ist_str(),
             "voltage": float(voltage),
             "current": float(current),
             "power_kw": float(power_kw),
