@@ -50,6 +50,19 @@ def _start_detector():
 
 _start_detector()
 
+@st.cache_resource
+def _start_cloud_replay():
+    try:
+        enabled = str(st.secrets.get("CLOUD_REPLAY", "false")).lower() == "true"
+    except Exception:
+        enabled = False
+    if enabled:
+        from cloud_replay import start_cloud_replay
+        return start_cloud_replay()
+    return None
+
+_start_cloud_replay()
+
 # Custom Styling
 st.markdown("""
 <style>
@@ -383,6 +396,15 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
                     alert_desc = str(df_anomalies.iloc[0]["description"])
             except Exception:
                 pass
+        # Demo: stay red if any reading in the last minute was an overload spike
+        if not is_anomaly and st.session_state["relay_state"] != "DISCONNECTED":
+            recent = fetch_telemetry_history(limit=120)
+            if not recent.empty and (recent["power_kw"] >= 7.0).any():
+                peak = float(recent["power_kw"].max())
+                is_anomaly = True
+                alert_type = "Overload / Power Surge"
+                severity = "CRITICAL"
+                alert_desc = f"Power spike of {peak:.2f} kW detected in the last minute."
         # Banner
         if is_anomaly:
             st.markdown(f"""

@@ -20,7 +20,7 @@ from config import (
 BUILDING_ID = 55        # which building to replay
 DELAY_SEC = 0.5         # seconds between messages (smaller = faster)
 LEAD_IN = 30            # normal readings shown before the first anomaly
-DEMO_BOOST_ANOMALIES = False   # True = replace anomaly readings with fake 8-12 kW spikes
+DEMO_BOOST_ANOMALIES = True  # True = replace anomaly readings with fake 8-12 kW spikes
 # ---------------------------------------------
 
 HERE = os.path.dirname(os.path.abspath(__file__))
