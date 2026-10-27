@@ -3,3 +3,5 @@
 *.joblib
 __pycache__/
 .vscode/
+logs/
+*.db-journal

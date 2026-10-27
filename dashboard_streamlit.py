@@ -371,7 +371,18 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
             alert_type = "Power Theft / Meter Bypass"
             severity = "CRITICAL"
             alert_desc = f"Voltage present ({latest_voltage:.1f} V) but power is near zero ({latest_power:.3f} kW). Meter bypassed."
-
+        # AI flag: turn red if the Isolation Forest logged an anomaly in the last 10 seconds
+        if not is_anomaly and st.session_state["relay_state"] != "DISCONNECTED" and not df_anomalies.empty:
+            try:
+                t_latest = pd.to_datetime(df_telemetry.iloc[-1]["timestamp"])
+                t_anom = pd.to_datetime(df_anomalies.iloc[0]["timestamp"])
+                if (t_latest - t_anom).total_seconds() <= 10:
+                    is_anomaly = True
+                    alert_type = str(df_anomalies.iloc[0]["anomaly_type"])
+                    severity = str(df_anomalies.iloc[0]["severity"])
+                    alert_desc = str(df_anomalies.iloc[0]["description"])
+            except Exception:
+                pass
         # Banner
         if is_anomaly:
             st.markdown(f"""
