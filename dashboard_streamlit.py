@@ -300,7 +300,7 @@ with st.sidebar:
 
     st.markdown("---")
     auto_refresh = st.checkbox("🔄 Enable Auto-Refresh", value=True)
-    refresh_rate = st.slider("Refresh Interval (seconds)", min_value=1, max_value=10, value=2)
+    refresh_rate = st.slider("Refresh Interval (seconds)", min_value=1, max_value=10, value=1)
 
     # Anomaly injection only for Admin or Inspector
     if st.session_state["role"] in ["Grid Administrator", "Utility Security Inspector"]:
@@ -389,7 +389,7 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
             try:
                 t_latest = pd.to_datetime(df_telemetry.iloc[-1]["timestamp"])
                 t_anom = pd.to_datetime(df_anomalies.iloc[0]["timestamp"])
-                if (t_latest - t_anom).total_seconds() <= 10:
+                if (t_latest - t_anom).total_seconds() <= 2:
                     is_anomaly = True
                     alert_type = str(df_anomalies.iloc[0]["anomaly_type"])
                     severity = str(df_anomalies.iloc[0]["severity"])
@@ -398,13 +398,13 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
                 pass
         # Demo: stay red if any reading in the last minute was an overload spike
         if not is_anomaly and st.session_state["relay_state"] != "DISCONNECTED":
-            recent = fetch_telemetry_history(limit=20)
+            recent = fetch_telemetry_history(limit=2)
             if not recent.empty and (recent["power_kw"] >= 7.0).any():
                 peak = float(recent["power_kw"].max())
                 is_anomaly = True
                 alert_type = "Overload / Power Surge"
                 severity = "CRITICAL"
-                alert_desc = f"Power spike of {peak:.2f} kW detected in the last 10 seconds."
+                alert_desc = f"Power spike of {peak:.2f} kW detected just now ."
         # Banner
         if is_anomaly:
             st.markdown(f"""
