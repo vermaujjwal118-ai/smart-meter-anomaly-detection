@@ -7,6 +7,7 @@ import json
 import time
 import random
 import threading
+import traceback
 import pandas as pd
 import paho.mqtt.client as mqtt
 from config import (
@@ -18,6 +19,7 @@ BUILDING_ID = 55
 DELAY_SEC = 0.5
 LEAD_IN = 6                    # normal readings before the first anomaly
 DEMO_BOOST_ANOMALIES = True    # anomaly readings become 8-12 kW spikes (demo only)
+SPIKE_GAP_SEC = 20             # minimum seconds between two spikes
 
 
 def _loop():
@@ -42,11 +44,16 @@ def _loop():
     client.loop_start()
 
     energy = 125.40
+    last_spike = 0.0
     while True:
         for _, row in b.iterrows():
+            is_anom = int(row["anomaly"])
             power_kw = max(round(float(row["meter_reading"]) * scale, 2), 0.30)
-            if DEMO_BOOST_ANOMALIES and row["anomaly"] == 1:
+            if DEMO_BOOST_ANOMALIES and is_anom == 1 and (time.time() - last_spike) > SPIKE_GAP_SEC:
                 power_kw = round(random.uniform(8.5, 12.0), 2)
+                last_spike = time.time()
+            elif is_anom == 1:
+                power_kw = min(power_kw, 2.5)
             voltage = round(random.gauss(230.0, 2.5), 1)
             pf = round(random.uniform(0.93, 0.98), 2)
             current = round((power_kw * 1000.0) / (voltage * pf), 2)
@@ -61,14 +68,25 @@ def _loop():
                 "power_factor": pf,
                 "frequency": round(random.gauss(50.0, 0.05), 2),
                 "simulated_event": "Real data (LEAD building %d)" % BUILDING_ID,
-                "true_anomaly": int(row["anomaly"]),
+                "true_anomaly": is_anom,
                 "data_timestamp": row["timestamp"].isoformat(),
             }
             client.publish(TOPIC_RAW_DATA, json.dumps(msg), qos=0)
             time.sleep(DELAY_SEC)
 
 
+def _safe_loop():
+    while True:
+        try:
+            print("CLOUDREPLAY: starting", flush=True)
+            _loop()
+        except Exception:
+            print("CLOUDREPLAY: ERROR", flush=True)
+            traceback.print_exc()
+            time.sleep(10)
+
+
 def start_cloud_replay():
-    t = threading.Thread(target=_loop, daemon=True)
+    t = threading.Thread(target=_safe_loop, daemon=True)
     t.start()
     return t

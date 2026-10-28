@@ -384,7 +384,8 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
             alert_type = "Power Theft / Meter Bypass"
             severity = "CRITICAL"
             alert_desc = f"Voltage present ({latest_voltage:.1f} V) but power is near zero ({latest_power:.3f} kW). Meter bypassed."
-        # AI flag: turn red if the Isolation Forest logged an anomaly in the last 10 seconds
+
+        # AI flag: turn red if the Isolation Forest logged an anomaly in the last 2 seconds
         if not is_anomaly and st.session_state["relay_state"] != "DISCONNECTED" and not df_anomalies.empty:
             try:
                 t_latest = pd.to_datetime(df_telemetry.iloc[-1]["timestamp"])
@@ -396,7 +397,8 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
                     alert_desc = str(df_anomalies.iloc[0]["description"])
             except Exception:
                 pass
-        # Demo: stay red if any reading in the last minute was an overload spike
+
+        # Demo: red only for an instant when a spike arrives (last 2 readings)
         if not is_anomaly and st.session_state["relay_state"] != "DISCONNECTED":
             recent = fetch_telemetry_history(limit=2)
             if not recent.empty and (recent["power_kw"] >= 7.0).any():
@@ -404,7 +406,8 @@ if navigation == "📊 Telemetry & Anomaly Dashboard":
                 is_anomaly = True
                 alert_type = "Overload / Power Surge"
                 severity = "CRITICAL"
-                alert_desc = f"Power spike of {peak:.2f} kW detected just now ."
+                alert_desc = f"Power spike of {peak:.2f} kW detected just now."
+
         # Banner
         if is_anomaly:
             st.markdown(f"""
